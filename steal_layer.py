@@ -41,12 +41,12 @@ def steal_layer(model, full_matrix):
 
     return W_aligned, (mse, rms)
 
-def save_weights(model, weights, path):
+def save_weights(model, weights, error, path):
     os.makedirs(path, exist_ok=True)
 
     ckpt_path = os.path.join(path, "lm_head_stolen.pt")
 
-    stolen_tensor = torch.from_numpy(weights).float()
+    stolen_tensor = torch.from_numpy(weights).float().cpu()
 
     torch.save({"weights":stolen_tensor,
                 "mse": error[0],
@@ -58,12 +58,14 @@ def save_weights(model, weights, path):
     print(f"\nStolen lm_head saved to: {ckpt_path}")
 
 def load_stolen_weights(model, ckpt_path):
-    ckpt = torch.load(ckpt_path)
+    ckpt = torch.load(ckpt_path, map_location = 'cpu')
 
     weights = ckpt["weights"]
 
-    model.lm_head.weight.data = weights.clone()
+    device = model.lm_head.weight.device
+    model.lm_head.weight.data.copy_(weights.to(device))
 
+    return model
 
 
 if __name__ == "__main__":
@@ -120,4 +122,4 @@ if __name__ == "__main__":
     stolen_weights, error = steal_layer(model, full_matrix)
 
     # save stolen layer weights in file
-    save_weights(model, stolen_weights, "lm_head_stolen.pt")
+    save_weights(model, stolen_weights, error, "/scratch/salmanhu/extraction_results/")
