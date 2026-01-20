@@ -13,11 +13,11 @@
 
 set -euo pipefail
 
-module load StdEnv/2023 gcc arrow
+module load StdEnv/2023 gcc arrow httpproxy
 
 source $HOME/hacker_env/bin/activate
 
-cd $PROJECT_DIR/IFT6164/hacker/
+cd $PROJECT_DIR/IFT6164/hacker/nanoGPT
 
 # W&B
 export WANDB_PROJECT=gpt2-owt
@@ -33,7 +33,7 @@ test -f "$STOLEN_CKPT" || { echo "Missing stolen ckpt: $STOLEN_CKPT"; exit 1; }
 test -f "$DATA_PATH/openwebtext/train.bin" || { echo "Missing train.bin under $DATA_PATH/openwebtext"; exit 1; }
 test -f "$DATA_PATH/openwebtext/val.bin" || { echo "Missing val.bin under $DATA_PATH/openwebtext"; exit 1; }
 
-python nanoGPT/train.py \
+python train.py \
   --dataset=openwebtext \
   --data_path="$DATA_PATH" \
   --out_dir="$SCRATCH/gpt2-experiments/" \
