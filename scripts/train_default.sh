@@ -7,8 +7,9 @@
 #SBATCH --cpus-per-task=12
 #SBATCH --mem=64G
 #SBATCH --gpus=h100:1
-#SBATCH --output=logs/%x-%j.out
-#SBATCH --error=logs/%x-%j.err
+#SBATCH --output=/scratch/%u/gpt2-logs/%x-%j.out
+#SBATCH --error=/scratch/%u/gpt2-logs/%x-%j.err
+
 
 set -euo pipefail
 
@@ -24,7 +25,7 @@ export WANDB_NAME=gpt2_default
 
 export HF_HOME=$SCRATCH/hf_cache
 
-DATA_PATH="$SCRATCH/nanoGPT/data"
+export DATA_PATH="$SCRATCH/nanoGPT/data"
 
 test -f "$DATA_PATH/openwebtext/train.bin" || { echo "Missing train.bin under $DATA_PATH/openwebtext"; exit 1; }
 test -f "$DATA_PATH/openwebtext/val.bin" || { echo "Missing val.bin under $DATA_PATH/openwebtext"; exit 1; }
@@ -32,6 +33,7 @@ test -f "$DATA_PATH/openwebtext/val.bin" || { echo "Missing val.bin under $DATA_
 python train.py \
   --dataset=openwebtext \
   --data_path="$DATA_PATH" \
+  --out_dir="$SCRATCH/gpt2-experiments/" \
   --wandb_log=True \
   --wandb_project=$WANDB_PROJECT \
   --wandb_run_name=$WANDB_NAME \

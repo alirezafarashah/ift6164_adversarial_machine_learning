@@ -7,8 +7,9 @@
 #SBATCH --cpus-per-task=12
 #SBATCH --mem=64G
 #SBATCH --gpus=h100:1
-#SBATCH --output=logs/%x-%j.out
-#SBATCH --error=logs/%x-%j.err
+#SBATCH --output=/scratch/%u/gpt2-logs/%x-%j.out
+#SBATCH --error=/scratch/%u/gpt2-logs/%x-%j.err
+
 
 set -euo pipefail
 
@@ -24,7 +25,7 @@ export WANDB_NAME=gpt2_stolen_warmup_lr_mult
 
 export HF_HOME=$SCRATCH/hf_cache
 
-DATA_PATH="$SCRATCH/nanoGPT/data"
+export DATA_PATH="$SCRATCH/nanoGPT/data"
 STOLEN_CKPT="$SCRATCH/extraction_results/lm_head_stolen.pt"
 
 test -f "$STOLEN_CKPT" || { echo "Missing stolen ckpt: $STOLEN_CKPT"; exit 1; }
@@ -34,6 +35,7 @@ test -f "$DATA_PATH/openwebtext/val.bin" || { echo "Missing val.bin under $DATA_
 python train.py \
   --dataset=openwebtext \
   --data_path="$DATA_PATH" \
+  --out_dir="$SCRATCH/gpt2-experiments/" \
   --stolen_ckpt_path="$STOLEN_CKPT" \
   --freeze_emb_iters=2000 \
   --emb_lr_mult=0.1 \
