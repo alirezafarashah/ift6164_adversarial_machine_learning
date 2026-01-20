@@ -24,7 +24,7 @@ export WANDB_NAME=gpt2_stolen_lr_mult
 
 export HF_HOME=$SCRATCH/hf_cache
 
-DATA_PATH="/scratch/salmanhu/nanoGPT/data"
+DATA_PATH="$SCRATCH/nanoGPT/data"
 STOLEN_CKPT="$SCRATCH/extraction_results/lm_head_stolen.pt"
 
 test -f "$STOLEN_CKPT" || { echo "Missing stolen ckpt: $STOLEN_CKPT"; exit 1; }

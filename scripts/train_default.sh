@@ -24,7 +24,7 @@ export WANDB_NAME=gpt2_default
 
 export HF_HOME=$SCRATCH/hf_cache
 
-DATA_PATH="/scratch/salmanhu/nanoGPT/data"
+DATA_PATH="$SCRATCH/nanoGPT/data"
 
 test -f "$DATA_PATH/openwebtext/train.bin" || { echo "Missing train.bin under $DATA_PATH/openwebtext"; exit 1; }
 test -f "$DATA_PATH/openwebtext/val.bin" || { echo "Missing val.bin under $DATA_PATH/openwebtext"; exit 1; }

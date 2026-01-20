@@ -122,4 +122,4 @@ if __name__ == "__main__":
     stolen_weights, error = steal_layer(model, full_matrix)
 
     # save stolen layer weights in file
-    save_weights(model, stolen_weights, error, "/scratch/salmanhu/extraction_results/")
+    save_weights(model, stolen_weights, error, "$SCRATCH/extraction_results/")
