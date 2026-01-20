@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=12
-#SBATCH --mem=64G
+#SBATCH --mem=32G
 #SBATCH --gpus=h100:1
 #SBATCH --output=/scratch/%u/gpt2-logs/%x-%j.out
 #SBATCH --error=/scratch/%u/gpt2-logs/%x-%j.err
