@@ -15,16 +15,17 @@ set -euo pipefail
 
 module load StdEnv/2023 gcc arrow
 
-source $SCRATCH/hacker_env/bin/activate
+source $HOME/hacker_env/bin/activate
 
-cd $PROJECT_DIR/IFT6164/hacker/stealing_model
+cd $PROJECT_DIR/IFT6164/hacker/
 
 # W&B
 export WANDB_PROJECT=gpt2-owt
 export WANDB_NAME=gpt2_stolen_warmup
 
 export HF_HOME=$SCRATCH/hf_cache
-
+export TRANSFORMERS_OFFLINE=1
+export HF_DATASETS_OFFLINE=1
 export DATA_PATH="$SCRATCH/nanoGPT/data"
 STOLEN_CKPT="$SCRATCH/extraction_results/lm_head_stolen.pt"
 
@@ -32,7 +33,7 @@ test -f "$STOLEN_CKPT" || { echo "Missing stolen ckpt: $STOLEN_CKPT"; exit 1; }
 test -f "$DATA_PATH/openwebtext/train.bin" || { echo "Missing train.bin under $DATA_PATH/openwebtext"; exit 1; }
 test -f "$DATA_PATH/openwebtext/val.bin" || { echo "Missing val.bin under $DATA_PATH/openwebtext"; exit 1; }
 
-python train.py \
+python nanoGPT/train.py \
   --dataset=openwebtext \
   --data_path="$DATA_PATH" \
   --out_dir="$SCRATCH/gpt2-experiments/" \
