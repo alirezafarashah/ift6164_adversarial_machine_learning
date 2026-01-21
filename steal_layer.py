@@ -38,8 +38,38 @@ def steal_layer(model, full_matrix):
         print("SUCCESS: Extraction is highly accurate (matches paper results).")
     else:
         print("WARNING: Extraction error is higher than expected.")
+    
+    mse_rand, rms_rand, improvement = compare_stolen_to_random(W_true, W_rec)
 
-    return W_aligned, (mse, rms)
+    return W_aligned, (mse, rms, mse_rand, rms_rand, improvement)
+
+def compare_stolen_to_random(W_true, W_rec):
+    W_rand = np.random.randn(*W_rec.shape)
+    print(f"Random W shape: {W_rand.shape}")
+
+    print("Aligning random matrix to true weights (Control Experiment)...")
+    G_rand, residuals_rand, rank_rand, s_rand = np.linalg.lstsq(W_rand, W_true, rcond=None)
+
+    W_rand_aligned = W_rand @ G_rand
+    diff_rand = W_rand_aligned - W_true
+    mse_rand = np.mean(diff_rand ** 2)
+    rms_rand = np.sqrt(mse_rand)
+
+    print(f"Random Baseline RMS Error: {rms_rand:.2e}")
+    print("-" * 60)
+
+
+    improvement = rms_rand / rms
+    print(f"Attack vs Random Improvement Factor: {improvement:.1f}x")
+    if improvement > 100:
+        print("CONCLUSION: The attack successfully recovered the model weights.")
+        print("            (Error is significantly lower than random baseline)")
+    else:
+        print("CONCLUSION: The attack results are indistinguishable from noise.")
+    print("="*60)
+
+    return mse_rand, rms_rand, improvement
+    
 
 def save_weights(model, weights, error, path):
     os.makedirs(path, exist_ok=True)
@@ -51,6 +81,9 @@ def save_weights(model, weights, error, path):
     torch.save({"weights":stolen_tensor,
                 "mse": error[0],
                 "rms": error[1],
+                "mse_rand": error[2],
+                "rms_rand": error[3],
+                "improvement": error[4],
                 "hidden_size": model.config.hidden_size,
                 "vocab_size": model.config.vocab_size},
                ckpt_path)
