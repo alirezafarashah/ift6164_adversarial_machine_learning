@@ -238,7 +238,7 @@ def main():
         raise ValueError(f"Unknown family: {args.family}")
     
     # Run the attack
-    attack_family(model_refs, args.max_prompts)
+    attack_family(model_refs, args.max_prompts, save_dir)
     
     print("\n" + "="*60)
     print("Attack complete!")
