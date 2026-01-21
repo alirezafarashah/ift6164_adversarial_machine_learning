@@ -15,6 +15,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 QWEN_REFS = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B"]
 LLAMA_REFS = ["meta-llama/Llama-3.2-1B", "meta-llama/Llama-3.2-3B", "meta-llama/Llama-3.1-8B"]
 
+import os
+
+# Directory to save all attack results
+save_dir = "/scratch/salmanhu/attack_saves"
+
+# Create directory if it doesn't exist
+os.makedirs(save_dir, exist_ok=True)
+
 
 def generate_prompts(tokenizer, model, max_prompts):
     """
@@ -50,7 +58,7 @@ def generate_prompts(tokenizer, model, max_prompts):
     return random_prompts
 
 
-def attack_family(model_names, max_prompts):
+def attack_family(model_names, max_prompts, save_dir):
     """
     Attack a family of models by collecting their logits.
     
@@ -97,24 +105,25 @@ def attack_family(model_names, max_prompts):
         
         # Save logits to file
         model_name_clean = model_name.replace('/', '_')
-        logits_filename = f"logits_{model_name_clean}.npy"
+        logits_filename = os.path.join(save_dir, f"logits_{model_name_clean}.npy")
         np.save(logits_filename, full_matrix)
         print(f"Logits saved to {logits_filename}")
         
         # Save hidden states as well
         hidden_states_matrix = np.array(all_hidden_states)
-        hidden_filename = f"hidden_{model_name_clean}.npy"
+        hidden_filename = os.path.join(save_dir, f"hidden_{model_name_clean}.npy")
         np.save(hidden_filename, hidden_states_matrix)
         print(f"Hidden states saved to {hidden_filename}")
 
 
-def compute_and_save_singular_values(logits_filename, output_filename=None):
+def compute_and_save_singular_values(logits_filename, output_filename=None, save_dir=None):
     """
     Load logits from a file, compute singular values via SVD, and save them.
     
     Args:
         logits_filename: Path to the .npy file containing logits
         output_filename: Path to save the singular values (default: auto-generated)
+        save_dir: Directory to save the singular values (uses global save_dir if not specified)
     
     Returns:
         Singular values array
@@ -135,8 +144,14 @@ def compute_and_save_singular_values(logits_filename, output_filename=None):
     
     # Auto-generate output filename if not provided
     if output_filename is None:
-        base_name = logits_filename.replace('.npy', '')
-        output_filename = f"{base_name}_singular_values.npy"
+        base_name = os.path.basename(logits_filename).replace('.npy', '')
+        if save_dir is None:
+            import sys
+            # Use the global save_dir
+            save_dir_to_use = globals().get('save_dir', '.')
+        else:
+            save_dir_to_use = save_dir
+        output_filename = os.path.join(save_dir_to_use, f"{base_name}_singular_values.npy")
     
     # Save singular values
     np.save(output_filename, S)
@@ -145,19 +160,25 @@ def compute_and_save_singular_values(logits_filename, output_filename=None):
     return S
 
 
-def analyze_all_logits(pattern="logits_*.npy"):
+def analyze_all_logits(pattern="logits_*.npy", search_dir=None):
     """
     Find all logit files matching the pattern and compute their singular values.
     
     Args:
         pattern: Glob pattern to match logit files
+        search_dir: Directory to search for logit files (uses global save_dir if not specified)
     """
     import glob
     
-    logit_files = glob.glob(pattern)
+    if search_dir is None:
+        search_dir = globals().get('save_dir', '.')
+    
+    # Create full search pattern
+    full_pattern = os.path.join(search_dir, pattern)
+    logit_files = glob.glob(full_pattern)
     
     if not logit_files:
-        print(f"No logit files found matching pattern: {pattern}")
+        print(f"No logit files found matching pattern: {full_pattern}")
         return
     
     print(f"Found {len(logit_files)} logit file(s) to process")
