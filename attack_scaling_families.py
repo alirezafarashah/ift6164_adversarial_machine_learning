@@ -103,11 +103,21 @@ def attack_family(model_names, max_prompts, save_dir):
         full_matrix = np.array(all_logits)
         print(f"Full logits collected. Shape: {full_matrix.shape}")
         
-        # Save logits to file
+        # Compute singular values immediately via SVD
+        print("\nComputing singular values via SVD...")
+        S = np.linalg.svd(full_matrix, full_matrices=False, compute_uv=False)
+        
+        print(f"Number of singular values: {len(S)}")
+        print(f"Largest singular value: {S[0]:.2f}")
+        if len(S) > 1:
+            print(f"Second largest singular value: {S[1]:.2f}")
+        print(f"Smallest singular value: {S[-1]:.2e}")
+        
+        # Save only singular values (not full logits to save space)
         model_name_clean = model_name.replace('/', '_')
-        logits_filename = os.path.join(save_dir, f"logits_{model_name_clean}.npy")
-        np.save(logits_filename, full_matrix)
-        print(f"Logits saved to {logits_filename}")
+        singular_values_filename = os.path.join(save_dir, f"singular_values_{model_name_clean}.npy")
+        np.save(singular_values_filename, S)
+        print(f"Singular values saved to {singular_values_filename}")
         
         # Save hidden states as well
         hidden_states_matrix = np.array(all_hidden_states)
